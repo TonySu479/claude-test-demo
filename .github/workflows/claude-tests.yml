@@ -1,0 +1,49 @@
+name: Claude Test Generator
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  issue_comment:
+    types: [created]
+
+jobs:
+  generate-tests:
+    # Run on PRs, or when someone comments @claude on a PR
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'issue_comment' &&
+       github.event.issue.pull_request != null &&
+       contains(github.event.comment.body, '@claude'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Run Claude to generate and verify tests
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            You are a Java test engineer. Your job is to generate JUnit 5 tests for this project.
+
+            Steps:
+            1. Read CLAUDE.md to understand the project's test conventions.
+            2. Look at all Java source files in src/main/java/com/demo/.
+            3. Check src/test/java/com/demo/ to see which test files already exist.
+            4. For any source class that does NOT have a corresponding test file, generate a complete test file following the conventions in CLAUDE.md.
+            5. Run `mvn test` to verify all tests compile and pass.
+            6. If any tests fail, fix them and re-run until all tests pass.
+            7. Report a summary of what tests were created and the final test results.
