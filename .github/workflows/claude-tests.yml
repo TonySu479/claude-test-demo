@@ -37,7 +37,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          allowed_tools: "Bash,Read,Write,Edit,Glob,Grep"
+          claude_args: "--allowedTools Bash,Read,Write,Edit,Glob,Grep"
           show_full_output: "true"
           prompt: |
             You are a Java test engineer. Your job is to generate JUnit 5 tests for this project.
